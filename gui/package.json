@@ -1,0 +1,14 @@
+{
+  "name": "webstack-deployer-for-docker",
+  "description": "WebStack Deployer for Docker",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron src/main.js",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "electron": "^34.0.2"
+  }
+}
