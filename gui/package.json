@@ -4,11 +4,28 @@
   "version": "1.0.0",
   "main": "src/main.js",
   "license": "MIT",
+  "author": "Walter Nuñez / icarosnet@gmail.com",
   "scripts": {
     "start": "electron src/main.js",
     "build": "electron-builder"
   },
-  "dependencies": {
-    "electron": "^34.0.2"
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^34.0.2",
+    "electron-builder": "^24"
+  },
+  "build": {
+    "appId": "com.webstack.deployer4docker.app",
+    "productName": "WebStack Deployer for Docker",
+    "win": {
+      "target": "nsis",
+      "artifactName": "webstack-deployer-for-docker-${version}.exe"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "mac": {
+      "target": "dmg"
+    }
   }
 }

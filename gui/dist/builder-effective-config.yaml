@@ -1,0 +1,14 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.webstack.deployer4docker.app
+productName: WebStack Deployer for Docker
+win:
+  target: nsis
+  artifactName: webstack-deployer-for-docker-${version}.exe
+linux:
+  target: AppImage
+mac:
+  target: dmg
+files: []
+electronVersion: 34.0.2
