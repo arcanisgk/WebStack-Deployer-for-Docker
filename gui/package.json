@@ -19,13 +19,16 @@
     "productName": "WebStack Deployer for Docker",
     "win": {
       "target": "nsis",
-      "artifactName": "webstack-deployer-for-docker-${version}.exe"
+      "artifactName": "webstack-deployer-for-docker-${version}.exe",
+      "customInstaller": "installer/windows/customInstaller.nsh"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "customInstaller": "installer/linux/customInstaller.sh"
     },
     "mac": {
-      "target": "dmg"
+      "target": "dmg",
+      "customInstaller": "installer/mac/customInstaller.sh"
     }
   }
 }
