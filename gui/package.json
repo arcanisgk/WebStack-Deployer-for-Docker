@@ -6,10 +6,13 @@
   "license": "MIT",
   "author": "Walter Nuñez / icarosnet@gmail.com",
   "scripts": {
-    "start": "electron src/main.js",
+    "start": "electron src/main.js --trace-warnings",
     "build": "electron-builder"
   },
-  "dependencies": {},
+  "dependencies": {
+    "electron-is-dev": "^3.0.1",
+    "node-fetch": "^3.3.2"
+  },
   "devDependencies": {
     "electron": "^34.0.2",
     "electron-builder": "^24"
