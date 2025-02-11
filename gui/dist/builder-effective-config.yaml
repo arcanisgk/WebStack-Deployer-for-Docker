@@ -8,7 +8,14 @@ win:
   artifactName: webstack-deployer-for-docker-${version}.exe
 linux:
   target: AppImage
+  category: Development
+  artifactName: webstack-deployer-for-docker-${version}.AppImage
 mac:
   target: dmg
-files: []
-electronVersion: 34.0.2
+  category: public.app-category.developer-tools
+  artifactName: webstack-deployer-for-docker-${version}.dmg
+files:
+  - filter:
+      - src/**/*
+      - package.json
+electronVersion: 34.1.1

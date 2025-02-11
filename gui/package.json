@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "electron-is-dev": "^3.0.1",
-    "node-fetch": "^3.3.2"
+    "glob": "^11.0.1",
+    "node-fetch": "^3.3.2",
+    "rimraf": "^6.0.1"
   },
   "devDependencies": {
     "electron": "^34.0.2",
@@ -22,16 +24,24 @@
     "productName": "WebStack Deployer for Docker",
     "win": {
       "target": "nsis",
-      "artifactName": "webstack-deployer-for-docker-${version}.exe",
-      "customInstaller": "installer/windows/customInstaller.nsh"
+      "artifactName": "webstack-deployer-for-docker-${version}.exe"
     },
     "linux": {
       "target": "AppImage",
-      "customInstaller": "installer/linux/customInstaller.sh"
+      "category": "Development",
+      "artifactName": "webstack-deployer-for-docker-${version}.AppImage"
     },
     "mac": {
       "target": "dmg",
-      "customInstaller": "installer/mac/customInstaller.sh"
-    }
+      "category": "public.app-category.developer-tools",
+      "artifactName": "webstack-deployer-for-docker-${version}.dmg"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ]
   }
 }

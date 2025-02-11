@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebStack Deployer for Docker</title>
+    <link rel="stylesheet" href="assets/css/bootstrap.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="d-flex vh-100 vw-100">
+<div class="title-bar top">
+    <div class="dropdown">
+        <button class="btn btn-dark dropbtn" id="maintenanceBtn" data-bs-toggle="dropdown" aria-expanded="false">
+            Maintenance
+        </button>
+        <div class="dropdown-content dropdown-menu" aria-labelledby="maintenanceBtn">
+            <a class="dropdown-item" href="#" id="option1">Check for Updates</a>
+            <a class="dropdown-item" href="#" id="option2">Backup Settings</a>
+            <a class="dropdown-item" href="#" id="option3">Clear Cache</a>
+            <a class="dropdown-item" href="#" id="option4">Reset Preferences</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#" id="option5">Exit</a>
+        </div>
+    </div>
+    <div class="top-right-controls">
+        <button class="btn btn-dark control-button" id="settingsBtn">Settings</button>
+        <button class="btn btn-dark control-button" id="helpBtn">Help</button>
+        <button class="btn btn-dark control-button" id="aboutBtn">About</button>
+        <button class="btn window-control minimize" id="minimizeBtn">─</button>
+        <button class="btn window-control maximize" id="maximizeBtn">□</button>
+        <button class="btn window-control close" id="closeBtn">×</button>
+    </div>
+</div>
+
+<div class="content container-fluid">
+    <h1 class="display-4">WebStack Deployer for Docker</h1>
+</div>
+<script src="assets/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/renderer.js"></script>
+</body>
+</html>

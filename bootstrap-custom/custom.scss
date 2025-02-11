@@ -1,0 +1,27 @@
+// Custom variables
+$primary: #282c34;
+$secondary: #1f1f1f;
+$dark: #333;
+
+// Import only the Bootstrap components you need
+@import "node_modules/bootstrap/scss/bootstrap";
+
+// Your current custom styles converted to Bootstrap
+.title-bar {
+  @extend .navbar;
+  background: $secondary;
+}
+
+.window-control {
+  @extend .btn;
+  @extend .btn-sm;
+}
+
+// Keep Electron-specific styles
+.title-bar.top {
+  -webkit-app-region: drag;
+}
+
+.window-control {
+  -webkit-app-region: no-drag;
+}

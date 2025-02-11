@@ -1,0 +1,157 @@
+:root {
+    --app-bg: #282c34;
+    --title-bar-bg: #1f1f1f;
+    --control-hover: #444;
+    --control-bg: #333;
+    --separator-color: #444;
+    --close-hover: #e81123;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    background: var(--app-bg) !important;
+    color: white !important;
+    font-family: Arial, sans-serif;
+}
+
+.title-bar {
+    background: var(--title-bar-bg);
+    display: flex;
+    align-items: center;
+}
+
+.title-bar.top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    border-bottom: 2px solid var(--control-bg);
+    -webkit-app-region: drag;
+    justify-content: space-between;
+    padding: 0 10px;
+    z-index: 1030;
+}
+
+.top-right-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    -webkit-app-region: no-drag;
+}
+
+.control-button {
+    padding: 5px 15px !important;
+    background: var(--control-bg) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 4px !important;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.control-button:hover {
+    background: var(--control-hover) !important;
+}
+
+.window-control {
+    width: 46px;
+    height: 32px;
+    border: none !important;
+    background: transparent !important;
+    color: white !important;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    -webkit-app-region: no-drag;
+    padding: 0 !important;
+}
+
+.window-control:hover {
+    background: var(--control-hover) !important;
+}
+
+.window-control.close:hover {
+    background: var(--close-hover) !important;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    -webkit-app-region: no-drag;
+}
+
+.dropbtn {
+    background: var(--control-bg) !important;
+    color: white !important;
+    padding: 8px 16px !important;
+    border: none !important;
+    cursor: pointer;
+    border-radius: 4px !important;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: var(--title-bar-bg);
+    min-width: 180px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 1031;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.dropdown-content .dropdown-item {
+    color: white !important;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    background-color: transparent;
+}
+
+.dropdown-content .dropdown-item:hover {
+    background-color: var(--control-bg) !important;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: var(--control-hover) !important;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--separator-color);
+    margin: 4px 0;
+    border: none;
+}
+
+.content {
+    margin-top: 50px;
+    padding: 20px;
+}
+
+.dropdown:hover .dropdown-content {
+    display: none;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: var(--control-bg) !important;
+}
+
+/* Add show class for JavaScript toggle */
+.dropdown-content.show {
+    display: block !important;
+}
+
+.dropbtn:active {
+    background-color: var(--control-hover) !important;
+}

@@ -1,59 +1,68 @@
-const { app,BrowserWindow  } = require('electron');
-const { shell } = require('electron');
+const {app} = require('electron');
 const AppConfig = require('./models/AppConfig');
 const BackendController = require('./controllers/BackendController');
 const WindowManager = require('./views/WindowManager');
-const { ipcMain } = require('electron');
+const IpcController = require('./controllers/IpcController');
+const ApplicationSetup = require('./core/ApplicationSetup');
+const DevToolsManager = require('./core/DevToolsManager');
+const AppLifecycle = require('./core/AppLifecycle');
 
 class Application {
     constructor() {
         this.appConfig = new AppConfig();
         this.backendController = new BackendController();
-        this.windowManager = new WindowManager();
+        this.windowManager = null;
+        this.mainWindow = null;
+        this.ipcController = null;
     }
 
     async initialize() {
+        ApplicationSetup.configureCommandLineFlags();
         app.setPath('userData', this.appConfig.getUserDataPath());
-        await this.backendController.initializeFetch();
-        this._setupIpcHandlers();
-        this._setupAppEvents();
+
+        try {
+            await this.backendController.initializeFetch();
+            await this.setupAppEvents();
+            return this.ipcController;
+        } catch (error) {
+            console.error('Initialization error:', error);
+            throw error;
+        }
     }
 
-    _setupIpcHandlers() {
-        ipcMain.handle('execute-command', async (event, cmd) => {
-            return await this.backendController.executeCommand(cmd);
-        });
+    async setupAppEvents() {
+        await app.whenReady();
 
-        ipcMain.on('open-user-data-path', () => {
-            shell.openPath(this.appConfig.getUserDataPath())
-                .then(() => console.log("open path via shell!!!"));
-        });
-    }
-
-    _setupAppEvents() {
-        app.whenReady().then(async () => {
+        try {
             await this.backendController.startGoBackend();
-            this.windowManager.createMainWindow();
 
-            app.on('activate', () => {
-                if (BrowserWindow.getAllWindows().length === 0) {
-                    this.windowManager.createMainWindow();
-                }
-            });
-        });
+            this.windowManager = new WindowManager();
+            this.mainWindow = await this.windowManager.createMainWindow();
 
-        app.on('window-all-closed', () => {
-            if (process.platform !== 'darwin') {
-                app.quit();
+            if (this.mainWindow) {
+                this.ipcController = new IpcController(
+                    this.mainWindow,
+                    this.backendController,
+                    this.appConfig
+                );
+
+                DevToolsManager.setupDevToolsHandlers(this.mainWindow);
             }
-            this.backendController.shutdown();
-        });
 
-        process.on('exit', () => {
-            this.backendController.shutdown();
-        });
+            AppLifecycle.setupAppEventHandlers(this.windowManager, this.backendController);
+            ApplicationSetup.setupProcessEventHandlers(this.backendController);
+
+        } catch (error) {
+            console.error('Setup error:', error);
+            throw error;
+        }
     }
 }
 
 const application = new Application();
-application.initialize().then(() => console.log("Application initialized"));
+application.initialize().catch(err => {
+    console.error('Application initialization failed:', err);
+    app.quit();
+});
+
+module.exports = application;
