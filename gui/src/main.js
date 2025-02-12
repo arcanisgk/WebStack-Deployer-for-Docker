@@ -1,4 +1,5 @@
 const {app} = require('electron');
+const path = require("node:path");
 const AppConfig = require('./models/AppConfig');
 const BackendController = require('./controllers/BackendController');
 const WindowManager = require('./views/WindowManager');
@@ -6,6 +7,7 @@ const IpcController = require('./controllers/IpcController');
 const ApplicationSetup = require('./core/ApplicationSetup');
 const DevToolsManager = require('./core/DevToolsManager');
 const AppLifecycle = require('./core/AppLifecycle');
+
 
 class Application {
     constructor() {
@@ -19,6 +21,25 @@ class Application {
     async initialize() {
         ApplicationSetup.configureCommandLineFlags();
         app.setPath('userData', this.appConfig.getUserDataPath());
+
+        app.name = 'WebStack-Deployer-for-Docker';
+        app.setAppUserModelId('com.webstack.deployer');
+
+        if (process.platform === 'win32') {
+            app.setUserTasks([{
+                program: process.execPath,
+                arguments: '',
+                iconPath: path.join(__dirname, 'assets/icons/icon.ico'),
+                iconIndex: 0,
+                title: 'WebStack Deployer for Docker',
+                description: 'Launch WebStack Deployer for Docker'
+            }]);
+            app.setAsDefaultProtocolClient('webstack-deployer');
+        }
+
+
+        // Enable sandbox for all renderers
+        //app.enableSandbox();
 
         try {
             await this.backendController.initializeFetch();
@@ -41,7 +62,7 @@ class Application {
 
             if (this.mainWindow) {
                 this.ipcController = new IpcController(
-                    this.mainWindow,
+                    this.windowManager,
                     this.backendController,
                     this.appConfig
                 );

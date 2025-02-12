@@ -1,56 +1,64 @@
 const { BrowserWindow } = require('electron');
 const path = require('node:path');
-const SecurityPolicies = require('../security/SecurityPolicies');
 
 class WindowManager {
     constructor() {
         this.mainWindow = null;
     }
 
-    createMainWindow() {
-        return new Promise((resolve) => {
-            this.mainWindow = new BrowserWindow({
+    async createMainWindow() {
+        this.mainWindow = new BrowserWindow({
                 width: 1200,
                 height: 800,
                 frame: false,
+                icon: path.join(__dirname, '../assets/icons', process.platform === 'win32' ? 'icon.ico' : 'icon.icns'),
                 webPreferences: {
                     nodeIntegration: false,
                     contextIsolation: true,
-                    enableRemoteModule: false,
                     webSecurity: true,
                     preload: path.join(__dirname, '../preload.js'),
+                    //sandbox: true,
+                    experimentalFeatures: false
                 }
             });
 
-            // Initialize security policies
-            this.securityPolicies = SecurityPolicies.initSecurity(this.mainWindow);
+        const isDev = process.env.NODE_ENV === 'development';
+        const cspDirectives = isDev
+            ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://localhost:8080 ws://localhost:3000'"
+            : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://localhost:8080";
 
-            this.mainWindow.maximize();
+        this.mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+            callback({
+                responseHeaders: {
+                    ...details.responseHeaders,
+                    'Content-Security-Policy': [cspDirectives]
+                }
+            });
+        });
 
-            this.loadContent();
+        this.mainWindow.maximize();
+        await this.loadContent();
 
+        return new Promise((resolve) => {
             this.mainWindow.once('ready-to-show', () => {
-                resolve(this.getMainWindow());
+                resolve(this.mainWindow);
             });
 
             this.mainWindow.on('closed', () => {
                 this.mainWindow = null;
             });
-
         });
-
     }
 
-    loadContent() {
+    async loadContent() {
         const isDev = process.env.NODE_ENV === 'development';
 
+
         if (isDev) {
-            this.mainWindow.loadURL('http://localhost:3000')
-                .then(() => this.mainWindow.webContents.openDevTools())
-                .catch(err => console.error('Failed to load dev server:', err));
+            await this.mainWindow.loadURL('http://localhost:3000');
         } else {
-            this.mainWindow.loadFile(path.join(__dirname, '../index.html'))
-                .catch(err => console.error('Failed to load index.html:', err));
+            const htmlPath = path.join(__dirname, '../index.html');
+            await this.mainWindow.loadFile(htmlPath);
         }
     }
 

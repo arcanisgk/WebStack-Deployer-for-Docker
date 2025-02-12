@@ -4,72 +4,101 @@ class SecurityPolicies {
     static NONCE_LENGTH = 32;
 
     static CSP_DIRECTIVES = {
-        'default-src': "'self'",
-        'script-src': "'self' 'unsafe-inline'",
-        'style-src': "'self' 'unsafe-inline' https://fonts.googleapis.com",
-        'img-src': "'self' data: https:",
-        'font-src': "'self' https://fonts.gstatic.com",
-        'object-src': "'none'",
-        'base-uri': "'self'",
-        'form-action': "'self'",
-        'frame-ancestors': "'none'",
-        'connect-src': "'self'",
-        'media-src': "'self'",
-        'worker-src': "'self'",
-        'manifest-src': "'self'"
-    };
-
-    static SECURITY_HEADERS = {
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-XSS-Protection': '1; mode=block',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'geolocation=(), microphone=(), camera=()'
+        'default-src': ["'self'"],
+        'script-src': ["'self'", "'unsafe-inline'"],
+        'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        'img-src': ["'self'", "data:", "https:", "blob:"],
+        'font-src': ["'self'", "data:","https://fonts.gstatic.com"],
+        'object-src': ["'none'"],
+        'base-uri': ["'self'"],
+        'form-action': ["'self'"],
+        'frame-ancestors': ["'none'"],
+        'connect-src': ["'self'","ws:", "wss:"],
+        'media-src': ["'self'", "blob:"],
+        'worker-src': ["'self'", "blob:"],
+        'manifest-src': ["'self'"]
     };
 
     constructor() {
-        this.nonce = '';
-        this.contentSecurityPolicy = '';
+        this.nonce = this.generateNonce();
+        this.contentSecurityPolicy = this.buildCSP();
     }
 
     generateNonce() {
-        this.nonce = crypto.randomBytes(SecurityPolicies.NONCE_LENGTH).toString('hex');
-        return this.nonce;
+        return crypto.randomBytes(SecurityPolicies.NONCE_LENGTH).toString('hex');
     }
 
     buildCSP() {
         const directives = {...SecurityPolicies.CSP_DIRECTIVES};
 
-        directives['script-src'] += ` 'nonce-${this.nonce}'`;
-        directives['style-src'] += ` 'nonce-${this.nonce}'`;
+        directives['script-src'] = [
+            ...directives['script-src'],
+            `'unsafe-inline'`,
+            `'nonce-${this.nonce}'`
+        ];
 
-        this.contentSecurityPolicy = Object.entries(directives)
-            .map(([directive, value]) => `${directive} ${value}`)
-            .join('; ') + '; block-all-mixed-content; upgrade-insecure-requests;';
+        directives['style-src'] = [
+            ...directives['style-src'],
+            `'unsafe-inline'`,
+            `'nonce-${this.nonce}'`
+        ];
 
-        return this.contentSecurityPolicy;
+        return Object.entries(directives)
+            .map(([key, values]) => `${key} ${values.join(' ')}`)
+            .join('; ');
     }
 
     applySecurityPolicy(window) {
-        // Apply to Electron window
+
         window.webContents.session.webRequest.onHeadersReceived((details, callback) => {
             callback({
                 responseHeaders: {
                     ...details.responseHeaders,
-                    ...SecurityPolicies.SECURITY_HEADERS,
-                    'Content-Security-Policy': [this.contentSecurityPolicy]
+                    'Content-Security-Policy': [this.contentSecurityPolicy],
+                    'X-Content-Type-Options': ['nosniff'],
+                    'X-Frame-Options': ['DENY'],
+                    'X-XSS-Protection': ['1; mode=block'],
+                    'Referrer-Policy': ['strict-origin-when-cross-origin'],
+                    'Permissions-Policy': ['camera=(), microphone=(), geolocation=()']
                 }
             });
         });
+
+        // Disable navigation
+        /*
+        window.webContents.on('will-navigate', (event, url) => {
+            const parsedUrl = new URL(url);
+            if (parsedUrl.origin !== 'file://') {
+                event.preventDefault();
+            }
+        });
+        */
+
+
+        // Block new window creation
+        window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
+        // Disable all permission requests
+        window.webContents.session.setPermissionRequestHandler((_, __, callback) => {
+            callback(false);
+        });
+
+        // Disable remote content
+        window.webContents.session.setPreloads([]);
     }
 
     static initSecurity(window) {
         const securityPolicies = new SecurityPolicies();
-        securityPolicies.generateNonce();
-        securityPolicies.buildCSP();
         securityPolicies.applySecurityPolicy(window);
         return securityPolicies;
+    }
+
+    getNonce() {
+        return this.nonce;
+    }
+
+    getCSP() {
+        return this.contentSecurityPolicy;
     }
 }
 

@@ -2,8 +2,8 @@ const { ipcMain } = require('electron');
 const { shell } = require('electron');
 
 class IpcController {
-    constructor(mainWindow, backendController, appConfig) {
-        this.mainWindow = mainWindow;
+    constructor(windowManager, backendController, appConfig) {
+        this.mainWindow = windowManager.getMainWindow();
         this.backendController = backendController;
         this.appConfig = appConfig;
         this.setupHandlers();
@@ -36,7 +36,6 @@ class IpcController {
             }
         });
 
-        // Menu action handlers
         ipcMain.on('open-settings', () => {
             // Implement settings window logic
             console.log('Settings requested');
@@ -75,7 +74,6 @@ class IpcController {
             }
         });
 
-        // File system handlers
         ipcMain.handle('open-user-data-path', () => {
             shell.openPath(this.appConfig.getUserDataPath())
                 .then(result => console.log('Opened user data path:', result))

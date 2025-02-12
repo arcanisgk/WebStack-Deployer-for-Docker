@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.stopPropagation();
         isDropdownOpen = !isDropdownOpen;
         dropdownContent.classList.toggle('show', isDropdownOpen);
-    });
+    },{ passive: true, capture: true });
 
     // Close dropdown when clicking outside
     document.addEventListener('click', (event) => {
