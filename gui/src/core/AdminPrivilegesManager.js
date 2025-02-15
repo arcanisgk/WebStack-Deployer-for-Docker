@@ -1,90 +1,148 @@
-const { exec, execSync, spawn } = require('child_process');
+const { exec, spawn } = require('child_process');
 const os = require('os');
 
 /**
- * Manages application elevation and admin privileges across different platforms
+ * Manages administrative privileges for the application across different operating systems.
+ * Handles privilege elevation for both Windows (Administrator) and Unix-based (root) systems.
  */
 class AdminPrivilegesManager {
     /**
-     * Checks and ensures the application runs with admin privileges
+     * Ensures the application is running with administrative privileges.
+     * Attempts to elevate privileges if necessary.
+     * @throws {Error} If privilege elevation fails
      * @returns {Promise<void>}
      */
     static async ensureAdminPrivileges() {
-        const isAdmin =  await this.checkPrivilegesAndRelaunch();
-        console.log('isAdmin', isAdmin);
+        try {
+            const isAdmin = await this.checkPrivilegesAndRelaunch();
+            console.log('Administrative privileges status:', isAdmin);
+        } catch (error) {
+            console.error('Error verifying/obtaining administrative privileges:', error);
+            process.exit(1);
+        }
     }
 
+    /**
+     * Checks current privileges and initiates elevation if needed.
+     * @returns {Promise<boolean>} True if already running with admin privileges
+     * @private
+     */
     static async checkPrivilegesAndRelaunch() {
         if (os.platform() === 'win32') {
-            await exec('net session', async (err) => {
-                if (err) {
-                    console.log("Not running as Administrator. Relaunching...");
-                    await this.relaunchAsAdmin();
-                } else {
-                    console.log("Running as Administrator.");
-                }
+            return new Promise((resolve) => {
+                // Check if process is running with elevated privileges using PowerShell
+                const checkCommand = 'powershell.exe -NoProfile -Command "&{try{$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent());$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)} catch{$false}}"';
+
+                exec(checkCommand, async (err, stdout) => {
+                    const isElevated = stdout.trim().toLowerCase() === 'true';
+
+                    if (!isElevated) {
+                        console.log("Process not elevated - elevating to Administrator");
+                        await AdminPrivilegesManager.relaunchAsAdmin();
+                        resolve(false);
+                    } else {
+                        console.log("Process is running with Administrator privileges");
+                        resolve(true);
+                    }
+                });
             });
         } else {
-            if (process.getuid && process.getuid() !== 0) {
-                console.log("Not running as root. Relaunching...");
-                await this.relaunchAsAdmin();
-            } else {
-                console.log("Running as root.");
-            }
-        }
-        return true;
-    }
-
-    static async relaunchAsAdmin() {
-        const platform = os.platform();
-        const appPath = process.argv[0]; // Path to Electron executable
-        const scriptPath = process.argv[1]; // Path to main.js (or entry point)
-        const workingDir = process.cwd(); // Ensure correct working directory
-        const args = process.argv.slice(2).join(' '); // Preserve additional arguments
-
-        if (platform === 'win32') {
-            const command = `powershell -Command "Start-Process '${appPath}' -ArgumentList '${scriptPath} ${args}' -WorkingDirectory '${workingDir}' -Verb RunAs"`;
-            await exec(command, (err) => {
-                if (err) {
-                    console.error("Failed to elevate to administrator:", err);
-                } else {
-                    console.log("Restarting with administrator privileges...");
-                    process.exit(0);
-                }
-            });
-        } else {
-            const elevatedProcess = spawn('sudo', [appPath, scriptPath, ...process.argv.slice(2)], {
-                stdio: 'inherit',
-                detached: true,
-                cwd: workingDir, // Set correct working directory
-            });
-
-            elevatedProcess.on('error', (err) => {
-                console.error("Failed to elevate to root:", err);
-            });
-
-            elevatedProcess.on('spawn', () => {
-                console.log("Restarting with root privileges...");
-                process.exit(0);
-            });
-        }
-    }
-
-    static async isRunningAsAdmin() {
-        if (os.platform() === 'win32') {
-            exec('net session', (err) => {
-                if (err) {
-                    console.log("Not running as Administrator. Relaunching...");
-                    return false;
-                }
-            });
-        } else {
-            if (process.getuid && process.getuid() !== 0) {
-                console.log("Not running as root. Relaunching...");
+            // For Unix-based systems (Linux/macOS)
+            const isRoot = process.getuid && process.getuid() === 0;
+            if (!isRoot) {
+                console.log("Process not elevated - elevating to root");
+                await AdminPrivilegesManager.relaunchAsAdmin();
                 return false;
             }
+            console.log("Process is running with root privileges");
+            return true;
         }
-        return true;
+    }
+
+    /**
+     * Relaunches the application with elevated privileges.
+     * Handles both Windows (RunAs) and Unix-based (sudo) systems.
+     * @throws {Error} If elevation fails
+     * @private
+     */
+    static async relaunchAsAdmin() {
+        if (process.env.RELAUNCHED) {
+            console.error("Elevation attempt failed, terminating execution.");
+            process.exit(1);
+        }
+
+        process.env.RELAUNCHED = 'true';
+        const platform = os.platform();
+        const appPath = process.argv[0];
+        const scriptPath = process.argv[1];
+        const args = process.argv.slice(2);
+
+        try {
+            if (platform === 'win32') {
+                // Use PowerShell Start-Process to ensure proper elevation
+                const psArgs = [
+                    '-NoProfile',
+                    '-Command',
+                    `Start-Process '${appPath}' -ArgumentList '${scriptPath}','${args.join("','")}' -WorkingDirectory '${process.cwd()}' -Verb RunAs -Wait -PassThru | ForEach-Object { $_.StartInfo.EnvironmentVariables["RELAUNCHED"] = "true" }`
+                ];
+
+
+                await new Promise((resolve, reject) => {
+                    const elevateProcess = spawn('powershell.exe', psArgs, {
+                        stdio: 'inherit',
+                        windowsHide: true
+                    });
+
+                    elevateProcess.on('exit', (code) => {
+                        if (code === 0) {
+                            console.log("Successfully relaunched with Administrator privileges");
+                        } else {
+                            reject(new Error(`Elevation failed with code: ${code}`));
+                        }
+                        process.exit(code);
+                    });
+                });
+            } else {
+                // For Unix-based systems
+                const sudoArgs = ['--askpass', appPath, scriptPath, ...args];
+
+                const elevatedProcess = spawn('sudo', sudoArgs, {
+                    stdio: 'inherit',
+                    env: { ...process.env, SUDO_ASKPASS: '/usr/lib/ssh/ssh-askpass' }
+                });
+
+                elevatedProcess.on('exit', (code) => {
+                    console.log(`Elevated process finished with code: ${code}`);
+                    process.exit(code);
+                });
+            }
+        } catch (error) {
+            console.error('Privilege elevation failed:', error);
+            process.exit(1);
+        }
+    }
+
+    /**
+     * Checks if the application is currently running with administrative privileges.
+     * @returns {Promise<boolean>} True if running with admin privileges
+     */
+    static async isRunningAsAdmin() {
+        try {
+            if (os.platform() === 'win32') {
+                return new Promise((resolve) => {
+
+                    const checkCommand = 'powershell.exe -NoProfile -Command "&{try{$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent());$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)} catch{$false}}"';
+
+                    exec(checkCommand, (err, stdout) => {
+                        resolve(stdout.trim().toLowerCase() === 'true');
+                    });
+                });
+            }
+            return process.getuid ? process.getuid() === 0 : false;
+        } catch (error) {
+            console.error('Error checking administrative privileges:', error);
+            return false;
+        }
     }
 }
 

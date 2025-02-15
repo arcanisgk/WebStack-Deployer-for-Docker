@@ -13,17 +13,11 @@
     "build": "electron-builder"
   },
   "dependencies": {
-    "electron-is-dev": "^3.0.1",
-    "glob": "^11.0.1",
-    "is-admin": "^4.0.0",
-    "is-elevated": "^4.0.0",
-    "node-fetch": "^3.3.2",
-    "rimraf": "^6.0.1",
-    "sudo-prompt": "^9.2.1"
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "electron": "^34.0.2",
-    "electron-builder": "^24"
+    "electron-builder": "^25.1.8"
   },
   "build": {
     "appId": "com.webstack.deployer4docker.app",

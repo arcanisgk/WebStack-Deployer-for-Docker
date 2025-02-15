@@ -9,24 +9,20 @@ const validChannels = new Set([
     'execute-command',
     'open-user-data-path',
     'refresh-security-nonce',
-    'check-admin-rights',
+    'check-admin-rights'
 ]);
 
 
 contextBridge.exposeInMainWorld('electronAPI', {
-    checkAdminRights: async (channel) => {
+    invoke: async (channel, data) => {
         if (validChannels.has(channel)) {
-            return await ipcRenderer.invoke('check-admin-rights');
+            return await ipcRenderer.invoke(channel, data);
         }
+        throw new Error(`Invalid channel: ${channel}`);
     },
     send: (channel, data) => {
         if (validChannels.has(channel)) {
             ipcRenderer.send(channel, data);
-        }
-    },
-    invoke: async (channel, data) => {
-        if (validChannels.has(channel)) {
-            return await ipcRenderer.invoke(channel, data);
         }
     },
     receive: (channel, func) => {

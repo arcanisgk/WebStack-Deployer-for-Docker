@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Window control buttons
     const windowControls = {
         minimize: document.getElementById('minimizeBtn'),
@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
         exit: document.getElementById('option5')
     };
 
+
+
     // Window controls event listeners
     Object.entries(windowControls).forEach(([action, element]) => {
         element.addEventListener('click', () => {
@@ -87,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminButton = document.getElementById('isAdmin');
 
     try {
-        const isAdmin = window.electronAPI.checkAdminRights('check-admin-rights');
+        const isAdmin = await window.electronAPI.invoke('check-admin-rights');
         console.log('Admin privileges check result:', isAdmin);
         if (isAdmin) {
             adminButton.style.display = 'block';
@@ -99,4 +101,5 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Failed to check admin privileges:', error);
         adminButton.style.display = 'none';
     }
+
 });

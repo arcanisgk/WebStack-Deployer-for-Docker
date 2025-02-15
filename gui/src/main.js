@@ -59,19 +59,16 @@ class Application {
 
         try {
             await this.backendController.startGoBackend();
-
             this.windowManager = new WindowManager();
-            this.mainWindow = await this.windowManager.createMainWindow();
-
-            if (this.mainWindow) {
+            //if (this.mainWindow) {
                 this.ipcController = new IpcController(
                     this.windowManager,
                     this.backendController,
                     this.appConfig
                 );
-
-                DevToolsManager.setupDevToolsHandlers(this.mainWindow);
-            }
+            //}
+            this.mainWindow = await this.windowManager.createMainWindow();
+            DevToolsManager.setupDevToolsHandlers(this.mainWindow);
 
             AppLifecycle.setupAppEventHandlers(this.windowManager, this.backendController);
             ApplicationSetup.setupProcessEventHandlers(this.backendController);

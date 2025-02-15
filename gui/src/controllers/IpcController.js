@@ -88,7 +88,12 @@ class IpcController {
 
         // Add this handler with the existing ones
         ipcMain.handle('check-admin-rights', async () => {
-            return await AdminPrivilegesManager.isRunningAsAdmin();
+            try {
+                return await AdminPrivilegesManager.isRunningAsAdmin();
+            } catch (error) {
+                console.error('Error checking admin rights:', error);
+                return false;
+            }
         });
     }
 }
