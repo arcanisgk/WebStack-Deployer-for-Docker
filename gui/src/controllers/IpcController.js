@@ -1,5 +1,6 @@
 const { ipcMain } = require('electron');
 const { shell } = require('electron');
+const AdminPrivilegesManager = require('../core/AdminPrivilegesManager');
 
 class IpcController {
     constructor(windowManager, backendController, appConfig) {
@@ -83,6 +84,11 @@ class IpcController {
         // Command execution handler
         ipcMain.handle('execute-command', async (event, cmd) => {
             return await this.backendController.executeCommand(cmd);
+        });
+
+        // Add this handler with the existing ones
+        ipcMain.handle('check-admin-rights', async () => {
+            return await AdminPrivilegesManager.isRunningAsAdmin();
         });
     }
 }

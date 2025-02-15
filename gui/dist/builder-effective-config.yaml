@@ -15,6 +15,11 @@ linux:
   category: Development
   artifactName: webstack-deployer-for-docker-${version}.AppImage
   icon: src/assets/icons/icon.ico
+  executableName: webstack-deployer-for-docker
+  desktop:
+    Terminal: 'false'
+    Type: Application
+    Categories: Development
 mac:
   target:
     - dmg
@@ -25,4 +30,4 @@ files:
   - filter:
       - src/**/*
       - package.json
-electronVersion: 34.1.1
+electronVersion: 34.2.0

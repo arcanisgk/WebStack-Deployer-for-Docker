@@ -22,10 +22,21 @@ class WindowManager {
                 }
             });
 
-        const isDev = process.env.NODE_ENV === 'development';
-        const cspDirectives = isDev
-            ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://localhost:8080 ws://localhost:3000'"
-            : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://localhost:8080";
+
+        const cspDirectives = [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+            "style-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:",
+            "img-src 'self' data: https:",
+            "font-src 'self' data: https:",
+            "connect-src 'self' http://localhost:8080 ws://localhost:3000",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "worker-src 'self' blob:",
+            "media-src 'self' blob: data:",
+            "object-src 'none'"
+        ].join('; ');
+
 
         this.mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
             callback({

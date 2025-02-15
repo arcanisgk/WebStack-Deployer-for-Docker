@@ -82,4 +82,21 @@ document.addEventListener('DOMContentLoaded', () => {
             isDropdownOpen = false;
         });
     });
+
+    // Get the admin button element
+    const adminButton = document.getElementById('isAdmin');
+
+    try {
+        const isAdmin = window.electronAPI.checkAdminRights('check-admin-rights');
+        console.log('Admin privileges check result:', isAdmin);
+        if (isAdmin) {
+            adminButton.style.display = 'block';
+            adminButton.setAttribute('title', 'Running with Administrator privileges');
+        } else {
+            adminButton.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Failed to check admin privileges:', error);
+        adminButton.style.display = 'none';
+    }
 });

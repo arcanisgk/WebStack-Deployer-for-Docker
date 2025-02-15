@@ -9,7 +9,7 @@
   "author": "Walter Nuñez / icarosnet@gmail.com",
   "icon": "src/assets/icons/icon.ico",
   "scripts": {
-    "start": "electron src/main.js --trace-warnings --win32metadata.requested-execution-level=requireAdministrator",
+    "start": "electron src/main.js --trace-warnings --verbose",
     "build": "electron-builder"
   },
   "dependencies": {
@@ -18,7 +18,8 @@
     "is-admin": "^4.0.0",
     "is-elevated": "^4.0.0",
     "node-fetch": "^3.3.2",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "sudo-prompt": "^9.2.1"
   },
   "devDependencies": {
     "electron": "^34.0.2",
@@ -33,11 +34,12 @@
       ],
       "artifactName": "webstack-deployer-for-docker-${version}.exe",
       "icon": "src/assets/icons/icon.ico",
-      "requestedExecutionLevel": "requireAdministrator",
-      "adminRequested": true
+      "requestedExecutionLevel": "requireAdministrator"
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "category": "Development",
       "artifactName": "webstack-deployer-for-docker-${version}.AppImage",
       "icon": "src/assets/icons/icon.ico",

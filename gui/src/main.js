@@ -7,6 +7,7 @@ const IpcController = require('./controllers/IpcController');
 const ApplicationSetup = require('./core/ApplicationSetup');
 const DevToolsManager = require('./core/DevToolsManager');
 const AppLifecycle = require('./core/AppLifecycle');
+const AdminPrivilegesManager = require('./core/AdminPrivilegesManager');
 
 
 class Application {
@@ -19,6 +20,8 @@ class Application {
     }
 
     async initialize() {
+        await AdminPrivilegesManager.ensureAdminPrivileges();
+
         ApplicationSetup.configureCommandLineFlags();
         app.setPath('userData', this.appConfig.getUserDataPath());
 
