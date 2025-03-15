@@ -4,56 +4,95 @@ const AdminPrivilegesManager = require('../core/AdminPrivilegesManager');
 
 class IpcController {
     constructor(windowManager, backendController, appConfig) {
-        this.mainWindow = windowManager.getMainWindow();
+        this.windowManager  = windowManager;
         this.backendController = backendController;
         this.appConfig = appConfig;
         this.setupHandlers();
     }
 
+    setMainWindow(window) {
+        this.windowManager.mainWindow = window;
+    }
+
     setupHandlers() {
 
+        this._setupWindowControls();
+        this._setupApplicationHandlers();
+        this._setupMaintenanceHandlers();
+        this._setupAdminHandlers();
+
+    }
+
+    /**
+     * Sets up window control handlers
+     * @private
+     */
+    _setupWindowControls() {
         ipcMain.on('window-control', (event, command) => {
-            if (!this.mainWindow) {
+            const mainWindow = this.windowManager.getMainWindow();
+            if (!mainWindow) {
                 console.error('[IPC] No main window reference');
                 return;
             }
 
             switch (command) {
                 case 'minimize':
-                    this.mainWindow.minimize();
+                    mainWindow.minimize();
                     break;
                 case 'maximize':
-                    if (this.mainWindow.isMaximized()) {
-                        this.mainWindow.unmaximize();
+                    if (mainWindow.isMaximized()) {
+                        mainWindow.unmaximize();
                     } else {
-                        this.mainWindow.maximize();
+                        mainWindow.maximize();
                     }
                     break;
                 case 'close':
-                    this.mainWindow.close();
+                    mainWindow.close();
                     break;
                 default:
                     console.error(`[IPC] Unknown window command: ${command}`);
             }
         });
+    }
 
+    /**
+     * Sets up application-specific handlers
+     * @private
+     */
+    _setupApplicationHandlers() {
         ipcMain.on('open-settings', () => {
-            // Implement settings window logic
             console.log('Settings requested');
         });
 
         ipcMain.on('open-help', () => {
-            // Implement help window logic
             console.log('Help requested');
         });
 
         ipcMain.on('open-about', () => {
-            // Implement about window logic
             console.log('About requested');
         });
 
-        // Maintenance handlers
+        ipcMain.handle('open-user-data-path', () => {
+            return shell.openPath(this.appConfig.getUserDataPath());
+        });
+
+        ipcMain.handle('execute-command', async (event, cmd) => {
+            return await this.backendController.executeCommand(cmd);
+        });
+    }
+
+    /**
+     * Sets up maintenance-related handlers
+     * @private
+     */
+    _setupMaintenanceHandlers() {
         ipcMain.on('maintenance', (event, action) => {
+            const mainWindow = this.windowManager.getMainWindow();
+            if (!mainWindow) {
+                console.error('[IPC] No main window reference');
+                return;
+            }
+
             switch(action) {
                 case 'check-updates':
                     console.log('Checking for updates...');
@@ -68,25 +107,19 @@ class IpcController {
                     console.log('Resetting preferences...');
                     break;
                 case 'exit':
-                    this.mainWindow.close();
+                    mainWindow.close();
                     break;
                 default:
                     console.error(`Unknown maintenance action: ${action}`);
             }
         });
+    }
 
-        ipcMain.handle('open-user-data-path', () => {
-            shell.openPath(this.appConfig.getUserDataPath())
-                .then(result => console.log('Opened user data path:', result))
-                .catch(err => console.error('Error opening user data path:', err));
-        });
-
-        // Command execution handler
-        ipcMain.handle('execute-command', async (event, cmd) => {
-            return await this.backendController.executeCommand(cmd);
-        });
-
-        // Add this handler with the existing ones
+    /**
+     * Sets up admin privilege handlers
+     * @private
+     */
+    _setupAdminHandlers() {
         ipcMain.handle('check-admin-rights', async () => {
             try {
                 return await AdminPrivilegesManager.isRunningAsAdmin();
